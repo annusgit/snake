@@ -3,13 +3,11 @@
 from __future__ import print_function
 from __future__ import division
 
-from six.moves import xrange
 import pygame
 from random import randint
 
 class Snake(pygame.sprite.Sprite):
-    # directions = ['l', 'r', 'u', 'd']
-    def __init__(self, color, seg_color, size, speed, length=3, width=600, height=600):
+    def __init__(self, color, size, speed, width=600, height=600):
         super(Snake,self).__init__()
         self.image = pygame.Surface(size)
         self.image.fill(color=color)
@@ -21,25 +19,18 @@ class Snake(pygame.sprite.Sprite):
         self.dir = 'r'
         self.w = width
         self.h = height
-        self.seg_color = seg_color
         self.size = size
         self.score = 0
+        self.opposite_direction = {'l':'r', 'r':'l', 'u':'d', 'd':'u'}
+        self.keys_to_directions = {273:'u', 275:'r', 274:'d', 276:'l'}
         return
 
     def update(self, *args):
         [key, eaten] = args
-        if key:
-            if key == 273:
-                self.dir = 'u'
-            elif key == 275:
-                self.dir = 'r'
-            elif key == 274:
-                self.dir = 'd'
-            elif key == 276:
-                self.dir = 'l'
-        if eaten:
-            self.score += 1
-
+        self.score += 1 if eaten else 0
+        if key in self.keys_to_directions.keys():
+            self.dir = self.keys_to_directions[key] if self.keys_to_directions[key] != self.opposite_direction[self.dir] \
+                else self.dir
         if self.dir == 'r':
             self.rect.x += self.speed*self.dt
         elif self.dir == 'l':
@@ -50,9 +41,9 @@ class Snake(pygame.sprite.Sprite):
             self.rect.y += self.speed*self.dt
 
         if self.rect.x > self.w:
-            self.rect.x = 0
+            self.rect.x = 1
         elif self.rect.y > self.h:
-            self.rect.y = 0
+            self.rect.y = 1
         elif self.rect.x < 0:
             self.rect.x = self.w-1
         elif self.rect.y < 0:
@@ -63,36 +54,40 @@ class Snake(pygame.sprite.Sprite):
 
 
 class Segment(pygame.sprite.Sprite):
-    def __init__(self, seg_color, size, pos, number, direction, distance):
+    def __init__(self, seg_color, size, pos, distance):
         super(Segment, self).__init__()
         self.image = pygame.Surface(size)
         self.image.fill(color=seg_color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos
         self.d = distance
-        if direction == 'l':
-            self.rect.x += self.d
-        elif direction == 'r':
-            self.rect.x -= self.d
-        elif direction == 'u':
-            self.rect.y += self.d
-        else:
-            self.rect.y -= self.d
 
-        self.number = number
-        return
 
-    def update(self, *args):
-        snake, sprites = args
-        if self.number == 0:
-            self.rect.x = snake.rect.x
-            self.rect.y = snake.rect.y
-            # print(self.rect, snake.rect)
+class Segments(object):
+
+    def __init__(self):
+        self.list = []
+
+    def draw(self, screen):
+        for seg in self.list:
+            screen.blit(seg.image, seg.rect)
+
+    def update(self, head_pos):
+        if len(self.list) > 0:
+            for i in range(len(self.list)-1, 0, -1):
+                self.list[i].rect.x, self.list[i].rect.y = self.list[i-1].rect.x, self.list[i-1].rect.y
+            self.list[0].rect.x, self.list[0].rect.y = head_pos
+
+    def positions(self):
+        for seg in self.list:
+            print(seg.rect.x, seg.rect.y)
+
+    def add_seg(self, head_pos, size, color):
+        if not len(self.list):
+            pos = (head_pos[0], head_pos[1])
         else:
-            self.rect.x = sprites[self.number-1].rect.x
-            self.rect.y = sprites[self.number-1].rect.y
-            # print(self.rect, sprites[self.number-1].rect)
-        return
+            pos = (self.list[-1].rect.x, self.list[-1].rect.y)
+        self.list.append(Segment(seg_color=color, size=size, pos=pos, distance=30))
 
 
 class Food(pygame.sprite.Sprite):
@@ -114,10 +109,6 @@ class Food(pygame.sprite.Sprite):
             self.rect.x = randint(20, self.w-20)
             self.rect.y = randint(20, self.h-20)
         return
-
-
-def get_index(seg):
-    return seg.number
 
 
 
