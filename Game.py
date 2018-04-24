@@ -90,6 +90,15 @@ class Segments(object):
         self.list.append(Segment(seg_color=color, size=size, pos=pos, distance=30))
 
 
+    def collision(self, head_pos):
+        if len(self.list) > 0:
+            for i in range(len(self.list)-1, 0, -1):
+                if (self.list[i].rect.x, self.list[i].rect.y) == head_pos:
+                    return True
+        return False
+
+
+
 class Food(pygame.sprite.Sprite):
     def __init__(self, color, size, width=600, height=600):
         super(Food, self).__init__()

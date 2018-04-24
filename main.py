@@ -22,7 +22,7 @@ def main():
     myfont = pygame.font.SysFont(None, 30)
     screen = pygame.display.set_mode([scr_width,scr_height])
     pygame.display.set_caption('snakes')
-    done = False
+    game_over = False
     snake_size = 15
     food_size = 8
     initial_length = 3
@@ -37,7 +37,7 @@ def main():
         snake_body.add_seg(head_pos=(snake.rect.x, snake.rect.y), size=(snake_size, snake_size),
                            color=get_color(len(snake_body.list)))
     delay = 0.05
-    while not done:
+    while not game_over:
         key_pressed = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
@@ -49,8 +49,9 @@ def main():
         if eaten:
             snake_body.add_seg(head_pos=(snake.rect.x, snake.rect.y), size=(snake_size, snake_size),
                                color=get_color(len(snake_body.list)))
-        snake_body.update((snake.rect.x, snake.rect.y))
+        snake_body.update(head_pos=(snake.rect.x, snake.rect.y))
         all_sprites.update(key_pressed, eaten)
+        game_over = snake_body.collision(head_pos=(snake.rect.x, snake.rect.y))
         score = snake.get_score()
         textsurface = myfont.render('score: {}'.format(score), True, colors['black'])
         screen.blit(textsurface, (0, scr_height-20))
